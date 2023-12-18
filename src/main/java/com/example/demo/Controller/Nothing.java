@@ -14,4 +14,9 @@ public class Nothing {
     public ResponseEntity<?> hello(){
         return ResponseEntity.status(200).body(new ResponseAPI("Success", "Startup Page", null));
     }
+
+    @GetMapping("/error")
+    public ResponseEntity<?> error(){
+        return ResponseEntity.status(500).body(new ResponseAPI("Error", "Error Page", null));
+    }
 }
