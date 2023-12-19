@@ -41,19 +41,22 @@ public class AccountController {
 
     @PostMapping("/add")
     public ResponseEntity<?> addAccount(@RequestBody Account account) {
-        if (accountRepo.addAccount(account) == 1) {
+        int result = accountRepo.addAccount(account);
+        if (result== 1) {
             return ResponseEntity.status(200).body(new ResponseAPI("Success", "Add account successfully", accountRepo.FindByMail(account.getMail())));
         }
-        return ResponseEntity.status(500).body(new ResponseAPI("Error", "Add account failed", null));
+        return ResponseEntity.status(500).body(new ResponseAPI("Error",result ==0? "Add account failed":"Account existed", null));
     }
 
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<?> deleteAccount(@PathVariable int id) {
         Account account = accountRepo.FindById(id);
-        if (accountRepo.deleteAccount(id) == 1) {
+        int result = accountRepo.deleteAccount(id);
+        if (result== 1) {
             return ResponseEntity.status(200).body(new ResponseAPI("Success", "Delete account successfully", account));
         }
-        return ResponseEntity.status(500).body(new ResponseAPI("Error", "Delete account failed", null));
+        return ResponseEntity.status(500).body(new ResponseAPI("Error",result ==0? "Delete account failed":"Account existed", null));
+
     }
 
     @PutMapping("/update")

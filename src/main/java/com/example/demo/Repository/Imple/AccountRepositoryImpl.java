@@ -2,7 +2,10 @@ package com.example.demo.Repository.Imple;
 
 import com.example.demo.Model.Account;
 import com.example.demo.Repository.AccountRepo;
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 
 import javax.sql.DataSource;
@@ -18,11 +21,14 @@ public class AccountRepositoryImpl implements AccountRepo {
 
     private final DataSource dataSource;
 
+    private SessionFactory sessionFactory;
+
     public AccountRepositoryImpl(DataSource dataSource) {
         this.dataSource = dataSource;
     }
 
     @Override
+    @Transactional
     public List<Account> getAllAccount() {
         List<Account> list = new ArrayList<>();
         String sql = "Select * from Account";
@@ -74,12 +80,24 @@ public class AccountRepositoryImpl implements AccountRepo {
             }
             connection = dataSource.getConnection();
             ps = connection.prepareStatement(sql);
+            connection.setAutoCommit(false);
             ps.setString(1, account.getMail());
             ps.setString(2, account.getPassword());
             ps.setInt(3, account.getRole());
-            ps.setBoolean(4, false);
-            return ps.executeUpdate();
+            ps.setBoolean(4, account.isIsActive());
+            int row = ps.executeUpdate();
+            if(row==0|| account.isIsActive()){
+                throw new Exception();
+            }
+            connection.commit();
+            return row;
         }  catch (Exception e) {
+            try {
+               if (connection!=null)connection.rollback();
+               else return -1;
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
             return 0;
         }finally {
             try {
@@ -87,8 +105,8 @@ public class AccountRepositoryImpl implements AccountRepo {
                     ps.close();
                 }
                 if (connection != null) {
+                    connection.setAutoCommit(true);
                     connection.close();
-
                 }
             } catch (SQLException e) {
                 e.printStackTrace();
